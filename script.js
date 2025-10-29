@@ -201,6 +201,7 @@ async function loadSurahDetails(surahId, surahName) {
   }
 
   ayatContainer.innerHTML = "";
+
   surahAyat.forEach(v => {
     const key = `${v.SURAH}_${v.AYAT}`;
     const isBookmarked = localStorage.getItem(key);
@@ -218,12 +219,37 @@ async function loadSurahDetails(surahId, surahName) {
       <div class="arabic" style="font-size:22px; text-align:right; margin-top:10px;">
         ${v.ARABIC}
       </div>
-      <div class="urdu" style="font-family:'Noto Nastaliq Urdu', serif; direction:rtl; text-align:right; font-size:20px; margin-top:10px;">
+
+      <div class="urdu" style="
+        font-family:'Noto Nastaliq Urdu', serif;
+        direction:rtl;
+        text-align:right;
+        font-size:20px;
+        margin-top:10px;
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+      ">
         ${v.URDU}
       </div>
-      <div class="roman" style="margin-top:10px;"><b>Roman Urdu:</b> ${v["ROMAN URDU"]}</div>
-      <div class="english" style="margin-top:5px;"><b>English:</b> ${v.ENGLISH}</div>
-      <hr>
+
+      <div class="roman" style="
+        margin-top:10px;
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+      ">
+        <b>Roman Urdu:</b> ${v["ROMAN URDU"]}
+      </div>
+
+      <div class="english" style="
+        margin-top:5px;
+        white-space: normal;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+      ">
+        <b>English:</b> ${v.ENGLISH}
+      </div>
     `;
     ayatContainer.appendChild(div);
   });
@@ -272,10 +298,29 @@ async function loadBookmarks() {
           <strong>${verse.SURAH} — Ayah ${verse.AYAT}</strong>
           <button class="remove-bookmark" data-key="${key}" style="border:none; background:none; color:red; font-size:16px; cursor:pointer;">❌</button>
         </div>
+
         <div class="arabic" style="font-size:22px; text-align:right;">${verse.ARABIC}</div>
-        <div class="urdu" style="font-family:'Noto Nastaliq Urdu', serif; direction:rtl; text-align:right; font-size:20px;">${verse.URDU}</div>
-        <div class="roman" style="margin-top:8px;"><b>Roman Urdu:</b> ${verse["ROMAN URDU"]}</div>
-        <div class="english"><b>English:</b> ${verse.ENGLISH}</div>
+        <div class="urdu" style="
+          font-family:'Noto Nastaliq Urdu', serif;
+          direction:rtl;
+          text-align:right;
+          font-size:20px;
+          white-space: normal;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+        ">${verse.URDU}</div>
+        <div class="roman" style="
+          margin-top:8px;
+          white-space: normal;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+        "><b>Roman Urdu:</b> ${verse["ROMAN URDU"]}</div>
+        <div class="english" style="
+          white-space: normal;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+        "><b>English:</b> ${verse.ENGLISH}</div>
+
         <button class="open-surah" data-surah="${verse.SURAH}" style="margin-top:8px;">📖 Open Surah</button>
         <hr>
       `;
@@ -299,6 +344,7 @@ async function loadBookmarks() {
     })
   );
 }
+
 
 // === Navigation Buttons ===
 homeBtn.addEventListener("click", () => {
