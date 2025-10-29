@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📖 Quran Explorer</title>
+
+  <!-- ✅ Link your external stylesheet -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- ✅ Urdu Font (for proper Nastaliq rendering) -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu&display=swap" rel="stylesheet">
+
+  <!-- ✅ Add this inline style -->
+  <style>
+    .urdu {
+      font-family: 'Noto Nastaliq Urdu', serif;
+      direction: rtl;
+      unicode-bidi: bidi-override;
+      font-size: 18px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>📖 Quran Explorer</h1>
+  </header>
+
+  <div id="navBar" style="display:flex; justify-content:space-between; align-items:center; background:#f3f3f3; padding:10px 15px;">
+    <h2 style="margin:0;">📘 Quran App</h2>
+    <div>
+      <button id="homeBtn">🏠 Home</button>
+      <button id="bookmarksBtn">⭐ Bookmarks</button>
+    </div>
+  </div>
+
+  <main>
+    <!-- PAGE 1: SURAH LIST -->
+    <section id="surahListPage">
+      <ul id="surahList"></ul>
+    </section>
+
+    <!-- PAGE 2: SURAH DETAILS -->
+    <section id="surahDetailPage" style="display:none;">
+      <button id="backBtn">⬅ Back</button>
+      <h2 id="surahTitle"></h2>
+      <div id="ayatContainer"></div>
+    </section>
+
+    <!-- PAGE 3: BOOKMARKS -->
+    <section id="bookmarksPage" style="display:none;">
+      <button id="backFromBookmarks">⬅ Back</button>
+      <h2>⭐ Bookmarked Ayahs</h2>
+      <div id="bookmarkedAyahs"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Developed with ❤️ — Quran Explorer</p>
+  </footer>
+
+  <!-- ✅ External JS file -->
+  <script src="script.js"></script>
+
+  <!-- ✅ Add this helper at the end of HTML (for testing directly) -->
+  <script>
+    function toUrduNumber(num) {
+      const urduDigits = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+      return num.toString().split('').map(d => urduDigits[d]).join('');
+    }
+
+    // Example (you can remove this later)
+    document.addEventListener("DOMContentLoaded", () => {
+      const test = document.createElement("div");
+      test.className = "urdu";
+      test.textContent = "Example Urdu Numbers: " + toUrduNumber(1234567890);
+      document.body.appendChild(test);
+    });
+  </script>
+</body>
+</html>
