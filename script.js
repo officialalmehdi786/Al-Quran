@@ -144,16 +144,18 @@ const sheetUrl =
 // === GLOBAL DATA CACHE ===
 let data = [];
 
-// === Fetch & Convert CSV to JSON ===
 async function fetchSheetData() {
   const res = await fetch(sheetUrl);
   const text = await res.text();
-  const rows = text.split("\n").map(r => r.split(","));
-  const headers = rows[0].map(h => h.trim());
-  return rows.slice(1).map(row => {
-    const obj = {};
-    headers.forEach((h, i) => (obj[h] = row[i]?.trim() || ""));
-    return obj;
+
+  return new Promise((resolve) => {
+    Papa.parse(text, {
+      header: true,
+      skipEmptyLines: true,
+      dynamicTyping: true,
+      transformHeader: h => h.trim(),   // ✅ trim headers
+      complete: (results) => resolve(results.data)
+    });
   });
 }
 
@@ -179,7 +181,6 @@ li.innerHTML = `
   });
 }
 
-// === Load Surah Details ===
 async function loadSurahDetails(surahId, surahName) {
   surahListPage.style.display = "none";
   surahDetailPage.style.display = "block";
@@ -208,49 +209,57 @@ async function loadSurahDetails(surahId, surahName) {
 
     const div = document.createElement("div");
     div.className = "ayah";
-    div.innerHTML = `
-      <div class="ayah-header" style="display:flex; justify-content:space-between; align-items:center;">
-        <strong>${v.SURAH} — Ayah <span style="font-weight:bold;">${v.AYAT}</span></strong>
-        <button class="bookmark-btn" data-key="${key}" style="border:none; background:none; font-size:18px; cursor:pointer;">
-          ${isBookmarked ? "⭐" : "☆"}
-        </button>
-      </div>
 
-      <div class="arabic" style="font-size:22px; text-align:right; margin-top:10px;">
-        ${v.ARABIC}
-      </div>
+    // Header
+    const header = document.createElement("div");
+    header.className = "ayah-header";
+    header.style.display = "flex";
+    header.style.justifyContent = "space-between";
+    header.style.alignItems = "center";
+    header.innerHTML = `<strong>${v.SURAH} — Ayah ${v.AYAT}</strong>
+      <button class="bookmark-btn" data-key="${key}" style="border:none; background:none; font-size:18px; cursor:pointer;">
+        ${isBookmarked ? "⭐" : "☆"}
+      </button>`;
+    div.appendChild(header);
 
-      <div class="urdu" style="
-        font-family:'Noto Nastaliq Urdu', serif;
-        direction:rtl;
-        text-align:right;
-        font-size:20px;
-        margin-top:10px;
-        white-space: normal;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-      ">
-        ${v.URDU}
-      </div>
+    // Arabic
+    const arabicDiv = document.createElement("div");
+    arabicDiv.className = "arabic";
+    arabicDiv.style.fontSize = "22px";
+    arabicDiv.style.textAlign = "right";
+    arabicDiv.style.marginTop = "10px";
+    arabicDiv.style.whiteSpace = "pre-wrap";
+    arabicDiv.textContent = v.ARABIC;
+    div.appendChild(arabicDiv);
 
-      <div class="roman" style="
-        margin-top:10px;
-        white-space: normal;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-      ">
-        <b>Roman Urdu:</b> ${v["ROMAN URDU"]}
-      </div>
+    // Urdu
+    const urduDiv = document.createElement("div");
+    urduDiv.className = "urdu";
+    urduDiv.style.fontFamily = "'Noto Nastaliq Urdu', serif";
+    urduDiv.style.direction = "rtl";
+    urduDiv.style.textAlign = "right";
+    urduDiv.style.fontSize = "20px";
+    urduDiv.style.marginTop = "10px";
+    urduDiv.style.whiteSpace = "pre-wrap"; // preserves line breaks
+    urduDiv.textContent = v.URDU;
+    div.appendChild(urduDiv);
 
-      <div class="english" style="
-        margin-top:5px;
-        white-space: normal;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-      ">
-        <b>English:</b> ${v.ENGLISH}
-      </div>
-    `;
+    // Roman Urdu
+    const romanDiv = document.createElement("div");
+    romanDiv.className = "roman";
+    romanDiv.style.marginTop = "10px";
+    romanDiv.style.whiteSpace = "pre-wrap";
+    romanDiv.textContent = "Roman Urdu: " + v["ROMAN URDU"];
+    div.appendChild(romanDiv);
+
+    // English
+    const englishDiv = document.createElement("div");
+    englishDiv.className = "english";
+    englishDiv.style.marginTop = "5px";
+    englishDiv.style.whiteSpace = "pre-wrap";
+    englishDiv.textContent = "English: " + v.ENGLISH;
+    div.appendChild(englishDiv);
+
     ayatContainer.appendChild(div);
   });
 
@@ -268,7 +277,6 @@ async function loadSurahDetails(surahId, surahName) {
     });
   });
 }
-
 // === Load Bookmarked Ayahs ===
 async function loadBookmarks() {
   bookmarksPage.style.display = "block";
@@ -299,24 +307,36 @@ async function loadBookmarks() {
           <button class="remove-bookmark" data-key="${key}" style="border:none; background:none; color:red; font-size:16px; cursor:pointer;">❌</button>
         </div>
 
-        <div class="arabic" style="font-size:22px; text-align:right;">${verse.ARABIC}</div>
+        <div class="arabic" style="
+          font-size:22px;
+          text-align:right;
+          margin-top:5px;
+          white-space: pre-wrap;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+        ">${verse.ARABIC}</div>
+
         <div class="urdu" style="
           font-family:'Noto Nastaliq Urdu', serif;
           direction:rtl;
           text-align:right;
           font-size:20px;
-          white-space: normal;
+          margin-top:5px;
+          white-space: pre-wrap;
           word-wrap: break-word;
           overflow-wrap: break-word;
         ">${verse.URDU}</div>
+
         <div class="roman" style="
-          margin-top:8px;
-          white-space: normal;
+          margin-top:5px;
+          white-space: pre-wrap;
           word-wrap: break-word;
           overflow-wrap: break-word;
         "><b>Roman Urdu:</b> ${verse["ROMAN URDU"]}</div>
+
         <div class="english" style="
-          white-space: normal;
+          margin-top:5px;
+          white-space: pre-wrap;
           word-wrap: break-word;
           overflow-wrap: break-word;
         "><b>English:</b> ${verse.ENGLISH}</div>
@@ -344,7 +364,6 @@ async function loadBookmarks() {
     })
   );
 }
-
 
 // === Navigation Buttons ===
 homeBtn.addEventListener("click", () => {

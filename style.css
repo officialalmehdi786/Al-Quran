@@ -155,6 +155,16 @@ button {
 }
 #backBtn:hover { background: #2e7d32; }
 
+/* Ensure Ayah text wraps properly */
+.arabic,
+.urdu,
+.roman,
+.english {
+    white-space: pre-wrap;       /* preserves spaces and wraps lines */
+    word-wrap: break-word;       /* breaks long words if needed */
+    overflow-wrap: break-word;   /* modern alternative for word-wrap */
+    width: 100%;                 /* ensures full container width */
+}
 footer {
   text-align: center;
   background: #eee;
