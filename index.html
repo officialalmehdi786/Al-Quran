@@ -5,13 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>📖 Quran Explorer</title>
 
-  <!-- ✅ Link your external stylesheet -->
+  <!-- Link your external stylesheet -->
   <link rel="stylesheet" href="style.css" />
 
-  <!-- ✅ Urdu Font (for proper Nastaliq rendering) -->
+  <!-- Urdu Font -->
   <link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu&display=swap" rel="stylesheet">
 
-  <!-- ✅ Add this inline style -->
   <style>
     .urdu {
       font-family: 'Noto Nastaliq Urdu', serif;
@@ -20,8 +19,8 @@
       font-size: 18px;
     }
   </style>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
 
 <body>
@@ -29,13 +28,25 @@
     <h1>📖 Quran Explorer</h1>
   </header>
 
-  <div id="navBar" style="display:flex; justify-content:space-between; align-items:center; background:#f3f3f3; padding:10px 15px;">
-    <h2 style="margin:0;">📘 Quran App</h2>
-    <div>
-      <button id="homeBtn">🏠 Home</button>
-      <button id="bookmarksBtn">⭐ Bookmarks</button>
+  <!-- Nav Bar + Global Search -->
+  <div id="navBar" style="display:flex; flex-direction:column; background:#f3f3f3; padding:10px 15px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+      <h2 style="margin:0;">📘 Quran App</h2>
+      <div>
+        <button id="homeBtn">🏠 Home</button>
+        <button id="bookmarksBtn">⭐ Bookmarks</button>
+        <button id="sectionsBtn">📂 Sections</button>
+      </div>
+    </div>
+
+    <!-- Global Search Bar -->
+    <div style="margin-top:10px; width:100%;">
+      <input id="searchInput" placeholder="🔍 Search any word..." style="width:100%; padding:6px; font-size:16px;">
     </div>
   </div>
+
+  <!-- Search results container -->
+  <div id="searchResults" style="display:none; padding:10px; background:#fff; border-bottom:1px solid #ccc;"></div>
 
   <main>
     <!-- PAGE 1: SURAH LIST -->
@@ -56,16 +67,25 @@
       <h2>⭐ Bookmarked Ayahs</h2>
       <div id="bookmarkedAyahs"></div>
     </section>
+
+    <!-- PAGE 4: SECTIONS / TOPICS -->
+    <section id="sectionsPage" style="display:none;">
+      <button id="backFromSections">⬅ Back</button>
+      <h2>📂 Your Sections / Topics</h2>
+      <div style="margin:10px 0;">
+        <input id="newSectionName" placeholder="Enter section name..." style="padding:6px; width:60%;">
+        <button id="createSectionBtn">➕ Create Section</button>
+      </div>
+      <div id="sectionsList"></div>
+    </section>
   </main>
 
   <footer>
     <p>Developed with ❤️ — Quran Explorer</p>
   </footer>
 
-  <!-- ✅ External JS file -->
   <script src="script.js"></script>
 
-  <!-- ✅ Add this helper at the end of HTML (for testing directly) -->
   <script>
     function toUrduNumber(num) {
       const urduDigits = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
