@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>📖 Quran Explorer</title>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2"></script>
 
   <!-- Link your external stylesheet -->
   <link rel="stylesheet" href="style.css" />
@@ -24,42 +25,56 @@
 </head>
 
 <body>
-  <header>
-    <h1>📖 Quran Explorer</h1>
-  </header>
 
-  <!-- Nav Bar + Global Search -->
-  <div id="navBar" style="display:flex; flex-direction:column; background:#f3f3f3; padding:10px 15px;">
-    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-      <h2 style="margin:0;">📘 Quran App</h2>
-      <div>
-        <button id="homeBtn">🏠 Home</button>
-        <button id="bookmarksBtn">⭐ Bookmarks</button>
-        <button id="sectionsBtn">📂 Sections</button>
-      </div>
-    </div>
-
-    <!-- Global Search Bar -->
-    <div style="margin-top:10px; width:100%;">
-      <input id="searchInput" placeholder="🔍 Search any word..." style="width:100%; padding:6px; font-size:16px;">
+<!-- === FIXED HEADER === -->
+<header id="fixedHeader">
+  <div class="header-top">
+    <h2>📘 Quran App</h2>
+    <div class="nav-buttons">
+      <button id="homeBtn">🏠 Home</button>
+      <button id="bookmarksBtn">⭐ Bookmarks</button>
+      <button id="sectionsBtn">📂 Sections</button>
     </div>
   </div>
 
-  <!-- Search results container -->
-  <div id="searchResults" style="display:none; padding:10px; background:#fff; border-bottom:1px solid #ccc;"></div>
+  <div class="header-search">
+    <input id="searchInput" placeholder="🔍 Search any word..." />
+  </div>
 
-  <main>
+  <!-- Thin translation dropdown -->
+  <div id="navbarTranslation">
+    <select id="translationSelect">
+      <option value="none">Arabic + Latin English</option>
+      <option value="urdu">Urdu</option>
+      <option value="roman">Roman Urdu</option>
+      <option value="english">English</option>
+      <option value="all">All</option>
+    </select>
+  </div>
+
+  <!-- Back Button + Surah Title -->
+  <div id="pageNav" style="display:none;">
+    <button id="backBtn">⬅ Back</button>
+    <h2 id="surahTitle"></h2>
+  </div>
+</header>
+
+
+<!-- Search results container -->
+<div id="searchResults" style="display:none; padding:10px; background:#fff; border-bottom:1px solid #ccc;"></div>
+
     <!-- PAGE 1: SURAH LIST -->
     <section id="surahListPage">
       <ul id="surahList"></ul>
     </section>
 
-    <!-- PAGE 2: SURAH DETAILS -->
-    <section id="surahDetailPage" style="display:none;">
-      <button id="backBtn">⬅ Back</button>
-      <h2 id="surahTitle"></h2>
-      <div id="ayatContainer"></div>
-    </section>
+<section id="surahDetailPage" style="display:none;">
+  <h2 id="surahTitle"></h2>
+
+
+  <div id="ayatContainer"></div>
+</section>
+
 
     <!-- PAGE 3: BOOKMARKS -->
     <section id="bookmarksPage" style="display:none;">
@@ -102,3 +117,4 @@
   </script>
 </body>
 </html>
+

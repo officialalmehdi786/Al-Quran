@@ -1,12 +1,13 @@
+
+
 // === SURAH INFO (names with Urdu) ===
-// Convert English numbers to Urdu digits
 function toUrduNumber(num) {
   const urduDigits = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
   return num.toString().replace(/\d/g, d => urduDigits[d]);
 }
 
 const surahNames = [
-   { no: 1, en: "Al-Fatiha", ur: "سورة الفاتحہ", noUr: "١" },
+  { no: 1, en: "Al-Fatiha", ur: "سورة الفاتحہ", noUr: "١" },
   { no: 2, en: "Al-Baqarah", ur: "سورة البقرة", noUr: "٢" },
   { no: 3, en: "Aal-E-Imran", ur: "سورة آل عمران", noUr: "٣" },
   { no: 4, en: "An-Nisa", ur: "سورة النساء", noUr: "٤" },
@@ -119,8 +120,7 @@ const surahNames = [
   { no: 111, en: "Al-Masad", ur: "سورة المسد", noUr: "١١١" },
   { no: 112, en: "Al-Ikhlas", ur: "سورة الإخلاص", noUr: "١١٢" },
   { no: 113, en: "Al-Falaq", ur: "سورة الفلق", noUr: "١١٣" },
-  { no: 114, en: "An-Naas", ur: "سورة الناس", noUr: "١١٤" }
-  // ... continue for all Surahs
+  { no: 114, en: "An-Naas", ur: "سورة الناس", noUr: "١١٤" }// ... rest as before
 ];
 
 // === ELEMENTS ===
@@ -137,237 +137,360 @@ const backFromBookmarks = document.getElementById("backFromBookmarks");
 const homeBtn = document.getElementById("homeBtn");
 const bookmarksBtn = document.getElementById("bookmarksBtn");
 
-
 const sectionsPage = document.getElementById("sectionsPage");
 const backFromSections = document.getElementById("backFromSections");
 const sectionsBtn = document.getElementById("sectionsBtn");
 const sectionsList = document.getElementById("sectionsList");
 const newSectionName = document.getElementById("newSectionName");
 const createSectionBtn = document.getElementById("createSectionBtn");
-
-
-const searchInput = document.getElementById("searchInput");
-searchInput.addEventListener("input", () => {
-  const query = searchInput.value.trim().toLowerCase();
-
-// 1. Surah List Page
-  if (surahListPage.style.display === "block") {
-    surahList.innerHTML = ""; // clear previous
-    surahNames.forEach((s, i) => {
-      if (s.en.toLowerCase().includes(query) || s.ur.includes(query)) {
-        const li = document.createElement("li");
-        li.className = "surah-item";
-        li.innerHTML = `
-          <div class="surah-row">
-            <span class="en-number">${s.no}</span>
-            <div class="surah-name">
-              <span>${s.en}</span>
-              <span class="urdu">${s.ur}</span>
-            </div>
-            <span class="urdu-number">${toUrduNumber(s.no)}</span>
-          </div>
-        `;
-        li.addEventListener("click", () => loadSurahDetails(i + 1, s.en));
-        surahList.appendChild(li);
-      }
-    });
-
-    if (!surahList.hasChildNodes()) {
-      surahList.innerHTML = "<p>No Surah found.</p>";
-    }
-  }
-
-  // 2. Bookmarks Page
-  if (bookmarksPage.style.display === "block") {
-    bookmarkedAyahs.innerHTML = ""; // clear previous
-    const keys = Object.keys(localStorage).filter(k => k.includes("_"));
-    keys.forEach(key => {
-      const [surah, ayah] = key.split("_");
-      const verse = data.find(v => 
-        v.SURAH.trim().toLowerCase() === surah.trim().toLowerCase() && 
-        String(v.AYAT).trim() === String(ayah).trim()
-      );
-      if (verse && (verse.SURAH.toLowerCase().includes(query) || verse.URDU.includes(query) || verse["ENGLISH TRANSLATION"].toLowerCase().includes(query))) {
-        const div = document.createElement("div");
-        div.className = "ayah";
-        div.innerHTML = `
-          <strong>${verse.SURAH} — Ayah ${verse.AYAT}</strong>
-          <div class="urdu">${verse.URDU}</div>
-          <div class="english">${verse["ENGLISH TRANSLATION"]}</div>
-        `;
-        bookmarkedAyahs.appendChild(div);
-      }
-    });
-    if (!bookmarkedAyahs.hasChildNodes()) bookmarkedAyahs.innerHTML = "<p>No bookmarks found.</p>";
-  }
-
-  // 3. Sections Page
-  if (sectionsPage.style.display === "block") {
-    const sections = JSON.parse(localStorage.getItem("sections") || "{}");
-    sectionsList.innerHTML = "";
-    Object.entries(sections).forEach(([name, ayahs]) => {
-      if (name.toLowerCase().includes(query)) {
-        const div = document.createElement("div");
-        div.className = "section-card";
-        div.style.background = "#fff";
-        div.style.margin = "10px 0";
-        div.style.padding = "10px";
-        div.style.borderRadius = "8px";
-        div.style.boxShadow = "0 2px 5px rgba(0,0,0,0.1)";
-        div.innerHTML = `<h3>${name}</h3><p>${ayahs.length} ayahs</p>`;
-        sectionsList.appendChild(div);
-      }
-    });
-    if (!sectionsList.hasChildNodes()) sectionsList.innerHTML = "<p>No sections found.</p>";
-  }
-});
-
-// ← Add click listeners here
-sectionsBtn.addEventListener("click", loadSections);
-backFromSections.addEventListener("click", () => {
-  sectionsPage.style.display = "none";
-  surahListPage.style.display = "block";
-});
-// === GOOGLE SHEET CSV LINK ===
-const sheetUrl =
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSIVMfq432UPRrpgIixP-v4CXZ0W8Rg82BUdglWWhYZiWVlnAs8KJot9MhIIsEVZo2mLxyHk7MkFXfG/pub?output=csv";
-
 // === GLOBAL DATA CACHE ===
 let data = [];
+// === TRANSLATION DISPLAY OPTIONS ===
+let showOptions = { urdu: false, roman: false, english: false };
+
+const translationSelect = document.getElementById("translationSelect");
+translationSelect.addEventListener("change", () => {
+  const val = translationSelect.value;
+  showOptions = {
+    urdu: val === "urdu" || val === "all",
+    roman: val === "roman" || val === "all",
+    english: val === "english" || val === "all"
+  };
+
+  // Re-render current Surah instantly if visible
+  if (surahDetailPage.style.display === "block") {
+    const surahName = surahTitle.textContent.replace("📘 Surah ", "").trim();
+    loadSurahDetails(1, surahName);
+  }
+});
+
+// === RELIABLE SMART SEARCH (Fuzzy + Multi-language) ===
+const searchInput = document.getElementById("searchInput");
+const searchResults = document.getElementById("searchResults");
+let fuse = null;
+
+async function initializeSearch() {
+  if (!data.length) data = await fetchSheetData();
+  fuse = new Fuse(data, {
+    shouldSort: true,
+    includeScore: true,
+    threshold: 0.4,          // Lower = stricter (0.2 is strict, 0.6 is loose)
+    ignoreLocation: true,
+    keys: [
+      "SURAH",
+      "ARABIC",
+      "URDU",
+      "ROMAN URDU",
+      "ENGLISH",
+      "LATIN ENGLISH"
+    ]
+  });
+}
+
+/* -------------------
+  Smarter search handler
+  - Pure numbers (e.g. "36") => find all rows with AYAT == 36 (global)
+  - surah:ayah (e.g. "36:5") => open Surah 36 and scroll to ayah 5
+  - On Surah detail page: single number => scroll to that ayah in current surah
+  - Otherwise: fuzzy Fuse.js search
+-------------------*/
+searchInput.addEventListener("input", async () => {
+  const raw = searchInput.value.trim();
+  if (!raw) {
+    searchResults.style.display = "none";
+    searchResults.innerHTML = "";
+    return;
+  }
+
+  // ensure data + fuse ready for text searches
+  if (!data.length) data = await fetchSheetData();
+  if (!fuse) initializeSearch(); // don't await - fuse init is cheap
+
+  // check for surah:ayah format (e.g. 36:5 or 36:05)
+  const saMatch = raw.match(/^(\d{1,3})\s*[:\-]\s*(\d{1,3})$/);
+  if (saMatch) {
+    const surahNum = parseInt(saMatch[1], 10);
+    const ayahNum = parseInt(saMatch[2], 10);
+
+    // find surah by number
+    const surahObj = surahNames.find(s => Number(s.no) === surahNum);
+    if (surahObj) {
+      // show quick result item to open that surah and jump to ayah
+      searchResults.style.display = "block";
+      searchResults.innerHTML = `<div class="search-result" style="padding:12px; cursor:pointer;">
+        <b>📖 Surah ${surahObj.en} — ${surahObj.ur}</b>
+        <div>➡ Jump to Ayah ${ayahNum}</div>
+      </div>`;
+      searchResults.querySelector(".search-result").addEventListener("click", async () => {
+        searchResults.style.display = "none";
+        searchInput.value = "";
+        await loadSurahDetails(surahObj.no, surahObj.en);
+        setTimeout(() => scrollToAyah(ayahNum), 500);
+      });
+      return;
+    }
+    // if surah number not found, fall through to fuzzy below
+  }
+
+  // check for pure numeric input (only digits). This is the change you asked for:
+  const onlyNumberMatch = raw.match(/^\d+$/);
+  if (onlyNumberMatch) {
+    const n = parseInt(raw, 10);
+
+    // If we're on a Surah detail page, interpret numeric as ayah number within that surah
+    if (surahDetailPage.style.display === "block") {
+      // attempt to scroll to that ayah in current surah
+      scrollToAyah(n);
+      searchResults.style.display = "none";
+      searchInput.value = "";
+      return;
+    }
+
+    // OTHERWISE: global AYAT search (show all verses where AYAT === n)
+    const results = data.filter(row => {
+      // normalize AYAT values that may be numbers or strings
+      const ay = row.AYAT;
+      return Number(ay) === n;
+    });
+
+    searchResults.style.display = "block";
+    if (!results.length) {
+      searchResults.innerHTML = `<p style="padding:12px;">No ayahs found with number ${n}.</p>`;
+      return;
+    }
+
+    searchResults.innerHTML = `<h3 style="margin:6px 8px;">🔍 Ayah number ${n} — ${results.length} result(s)</h3>`;
+    results.slice(0, 100).forEach(v => { // limit to 100 results for safety
+      const div = document.createElement("div");
+      div.className = "search-result";
+      div.style.borderBottom = "1px solid #eee";
+      div.style.padding = "10px";
+      div.style.cursor = "pointer";
+      div.innerHTML = `
+        <b>${v.SURAH}</b> — Ayah ${v.AYAT}<br>
+        <div class="arabic" style="font-size:18px; text-align:right; margin-top:6px;">${v.ARABIC}</div>
+        <div class="latin" style="font-style:italic; color:#3e2723; margin-top:6px;">${v["LATIN ENGLISH"] || ""}</div>
+      `;
+      div.addEventListener("click", async () => {
+        // open surah and scroll to this ayah
+        searchResults.style.display = "none";
+        searchInput.value = "";
+        await loadSurahDetails(1, v.SURAH);
+        setTimeout(() => scrollToAyah(Number(v.AYAT)), 600);
+      });
+      searchResults.appendChild(div);
+    });
+    return;
+  }
+
+  // FALLBACK: normal fuzzy text search using Fuse
+  if (!fuse) await initializeSearch();
+  const fresults = fuse.search(raw);
+  searchResults.style.display = "block";
+  searchResults.innerHTML = `<h3 style="margin:6px 8px;">🔍 Found ${fresults.length} results</h3>`;
+  if (!fresults.length) {
+    searchResults.innerHTML += `<p style="padding:12px;">No matches found.</p>`;
+    return;
+  }
+  fresults.slice(0, 25).forEach(({ item }) => {
+    const v = item;
+    const div = document.createElement("div");
+    div.className = "search-result";
+    div.style.borderBottom = "1px solid #ddd";
+    div.style.padding = "8px";
+    div.style.cursor = "pointer";
+    div.innerHTML = `
+      <b>${v.SURAH}</b> — Ayah ${v.AYAT}<br>
+      <div class="arabic" style="font-size:20px; text-align:right;">${v.ARABIC}</div>
+      <div class="latin" style="font-style:italic; color:#3e2723;">${v["LATIN ENGLISH"] || ""}</div>
+    `;
+    div.addEventListener("click", () => {
+      searchResults.style.display = "none";
+      searchInput.value = "";
+      loadSurahDetails(1, v.SURAH);
+      setTimeout(() => {
+        const element = [...document.querySelectorAll(".ayah")]
+          .find(el => {
+            const h = el.querySelector("strong");
+            return h && h.textContent.includes(`Ayah ${v.AYAT}`);
+          });
+        if (element) element.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 900);
+    });
+    searchResults.appendChild(div);
+  });
+});
+
+
+
+
+// === GOOGLE SHEET CSV LINK ===
+const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSIVMfq432UPRrpgIixP-v4CXZ0W8Rg82BUdglWWhYZiWVlnAs8KJot9MhIIsEVZo2mLxyHk7MkFXfG/pub?output=csv";
+
 
 async function fetchSheetData() {
   const res = await fetch(sheetUrl);
   const text = await res.text();
-
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     Papa.parse(text, {
       header: true,
       skipEmptyLines: true,
       dynamicTyping: true,
-      transformHeader: h => h.trim(),   // ✅ trim headers
-      complete: (results) => resolve(results.data)
+      transformHeader: h =>
+        h
+          .replace(/\u00A0/g, " ") // remove non-breaking spaces
+          .replace(/\s+/g, " ")    // collapse multiple spaces
+          .trim()                  // remove start/end spaces
+          .toUpperCase(),          // standardize case
+      complete: results => resolve(results.data)
     });
   });
 }
-
 // === Load Surah List ===
 function loadSurahList() {
   surahList.innerHTML = "";
   surahNames.forEach((s, i) => {
     const li = document.createElement("li");
     li.className = "surah-item";
-li.innerHTML = `
-  <div class="surah-row">
-    <span class="en-number">${s.no}</span>
-    <div class="surah-name">
-      <span>${s.en}</span>
-      <span class="urdu">${s.ur}</span>
-    </div>
-    <span class="urdu-number">${toUrduNumber(s.no)}</span>
-  </div>
-`;
-
+    li.innerHTML = `
+      <div class="surah-row">
+        <span class="en-number">${s.no}</span>
+        <div class="surah-name">
+          <span>${s.en}</span>
+          <span class="urdu">${s.ur}</span>
+        </div>
+        <span class="urdu-number">${toUrduNumber(s.no)}</span>
+      </div>`;
     li.addEventListener("click", () => loadSurahDetails(i + 1, s.en));
     surahList.appendChild(li);
   });
 }
+const pageNav = document.getElementById("pageNav");
 
-async function loadSurahDetails(surahId, surahName) {
+function showBackNav(show, title = "") {
+  if (show) {
+    pageNav.style.display = "flex";
+    document.getElementById("surahTitle").textContent = `📘 Surah ${title}`;
+  } else {
+    pageNav.style.display = "none";
+  }
+}
+// === Load Surah Details ===
+async function loadSurahDetails(_, surahName) {
   surahListPage.style.display = "none";
   surahDetailPage.style.display = "block";
   bookmarksPage.style.display = "none";
-  surahTitle.innerHTML = `<b>📘 Surah ${surahName}</b>`;
+  surahTitle.textContent = `📘 Surah ${surahName}`;
+  document.getElementById("pageNav").style.display = "flex";
   ayatContainer.innerHTML = "<p>Loading...</p>";
 
-  if (!data.length) {
-    data = await fetchSheetData();
-  }
+  if (!data.length) data = await fetchSheetData();
 
-  const surahAyat = data.filter(
-    v => v.SURAH.trim().toLowerCase() === surahName.trim().toLowerCase()
-  );
+const normalize = s => (s || "").trim().toLowerCase().replace(/[^a-z0-9]/g, "");
+  const surahAyat = data.filter(v => normalize(v.SURAH || "") === normalize(surahName));
+
+  console.log("Loaded Surah:", surahName, "→", surahAyat.length, "ayahs");
 
   if (!surahAyat.length) {
-    ayatContainer.innerHTML = `<p>No verses found for Surah ${surahName}.</p>`;
+    ayatContainer.innerHTML = `<p style="color:red;">⚠️ No verses found for "${surahName}".</p>`;
     return;
   }
 
   ayatContainer.innerHTML = "";
-
 surahAyat.forEach(v => {
   const key = `${v.SURAH}_${v.AYAT}`;
   const isBookmarked = localStorage.getItem(key);
-
   const div = document.createElement("div");
   div.className = "ayah";
 
-  // ... your existing header, Arabic, Urdu, Roman, English divs
 
-  // Add to Section Button
-  const sectionBtn = document.createElement("button");
-  sectionBtn.textContent = "➕ Add to Section";
-  sectionBtn.style.marginTop = "8px";
-  sectionBtn.style.cursor = "pointer";
-  sectionBtn.addEventListener("click", () => addToSection(key));
-  div.appendChild(sectionBtn);
-
-  ayatContainer.appendChild(div)
-
-    // Header
-    const header = document.createElement("div");
-    header.className = "ayah-header";
-    header.style.display = "flex";
-    header.style.justifyContent = "space-between";
-    header.style.alignItems = "center";
-    header.innerHTML = `<strong>${v.SURAH} — Ayah ${v.AYAT}</strong>
-      <button class="bookmark-btn" data-key="${key}" style="border:none; background:none; font-size:18px; cursor:pointer;">
-        ${isBookmarked ? "⭐" : "☆"}
-      </button>`;
-    div.appendChild(header);
-
-    // Arabic
-    const arabicDiv = document.createElement("div");
-    arabicDiv.className = "arabic";
-    arabicDiv.style.fontSize = "22px";
-    arabicDiv.style.textAlign = "right";
-    arabicDiv.style.marginTop = "10px";
-    arabicDiv.style.whiteSpace = "pre-wrap";
-    arabicDiv.textContent = v.ARABIC;
-    div.appendChild(arabicDiv);
-
-    // Urdu
-    const urduDiv = document.createElement("div");
-    urduDiv.className = "urdu";
-    urduDiv.style.fontFamily = "'Noto Nastaliq Urdu', serif";
-    urduDiv.style.direction = "rtl";
-    urduDiv.style.textAlign = "right";
-    urduDiv.style.fontSize = "20px";
-    urduDiv.style.marginTop = "10px";
-    urduDiv.style.whiteSpace = "pre-wrap"; // preserves line breaks
-    urduDiv.textContent = v.URDU;
-    div.appendChild(urduDiv);
-
-    // Roman Urdu
-    const romanDiv = document.createElement("div");
-    romanDiv.className = "roman";
-    romanDiv.style.marginTop = "10px";
-    romanDiv.style.whiteSpace = "pre-wrap";
-    romanDiv.textContent = "Roman Urdu: " + v["ROMAN URDU"];
-    div.appendChild(romanDiv);
-
-    // English
-    const englishDiv = document.createElement("div");
-    englishDiv.className = "english";
-    englishDiv.style.marginTop = "5px";
-    englishDiv.style.whiteSpace = "pre-wrap";
-    englishDiv.textContent = "English: " + v["ENGLISH TRANSLATION"];
-    div.appendChild(englishDiv);
-
-    ayatContainer.appendChild(div);
+  function scrollToAyah(num) {
+  const ayahDivs = [...document.querySelectorAll(".ayah")];
+  const target = ayahDivs.find(div => {
+    const header = div.querySelector("strong");
+    if (!header) return false;
+    const match = header.textContent.match(/Ayah\s+(\d+)/i);
+    return match && parseInt(match[1]) === num;
   });
 
-  // Bookmark toggle
-  document.querySelectorAll(".bookmark-btn").forEach(btn => {
+  if (target) {
+    target.scrollIntoView({ behavior: "smooth", block: "center" });
+    target.classList.add("highlight");
+    setTimeout(() => target.classList.remove("highlight"), 1500);
+  } else {
+    alert(`⚠️ Ayah ${num} not found in this Surah.`);
+  }
+}
+
+  // Header + Bookmark
+  const header = `
+    <div style="display:flex; justify-content:space-between;">
+      <strong>${v.SURAH} — Ayah ${v.AYAT}</strong>
+      <button class="bookmark-btn" data-key="${key}" style="border:none; background:none; font-size:18px;">
+        ${isBookmarked ? "⭐" : "☆"}
+      </button>
+    </div>`;
+  div.innerHTML = header;
+
+  // Always show Arabic
+  const arabic = document.createElement("div");
+  arabic.className = "arabic";
+  arabic.style.fontSize = "22px";
+  arabic.style.textAlign = "right";
+  arabic.style.marginTop = "10px";
+  arabic.textContent = v.ARABIC;
+  div.appendChild(arabic);
+
+  // Always show Latin English
+  const latin = document.createElement("div");
+  latin.className = "latin";
+  latin.style.marginTop = "5px";
+  latin.style.fontStyle = "italic";
+  latin.textContent = v["LATIN ENGLISH"];
+  div.appendChild(latin);
+
+  // Optional translations based on dropdown
+  if (showOptions.urdu && v.URDU) {
+    const urdu = document.createElement("div");
+    urdu.className = "urdu";
+    urdu.style.fontFamily = "'Noto Nastaliq Urdu', serif";
+    urdu.style.direction = "rtl";
+    urdu.style.textAlign = "right";
+    urdu.style.fontSize = "20px";
+    urdu.style.marginTop = "10px";
+    urdu.textContent = v.URDU;
+    div.appendChild(urdu);
+  }
+
+  if (showOptions.roman && v["ROMAN URDU"]) {
+    const roman = document.createElement("div");
+    roman.className = "roman";
+    roman.style.marginTop = "10px";
+    roman.textContent = "Roman Urdu: " + v["ROMAN URDU"];
+    div.appendChild(roman);
+  }
+
+  if (showOptions.english && v.ENGLISH) {
+    const english = document.createElement("div");
+    english.className = "english";
+    english.style.marginTop = "5px";
+    english.textContent = "English: " + v.ENGLISH;
+    div.appendChild(english);
+  }
+
+  // Add Section button
+  const btn = document.createElement("button");
+  btn.textContent = "➕ Add to Section";
+  btn.className = "section-btn";
+  btn.dataset.key = key;
+  btn.style.marginTop = "8px";
+  div.appendChild(btn);
+
+  ayatContainer.appendChild(div);
+});
+
+
+  document.querySelectorAll(".bookmark-btn").forEach(btn =>
     btn.addEventListener("click", e => {
       const key = e.target.dataset.key;
       if (localStorage.getItem(key)) {
@@ -377,20 +500,22 @@ surahAyat.forEach(v => {
         localStorage.setItem(key, "true");
         e.target.textContent = "⭐";
       }
-    });
-  });
+    })
+  );
+
+  document.querySelectorAll(".section-btn").forEach(btn =>
+    btn.addEventListener("click", e => addToSection(e.target.dataset.key))
+  );
 }
 
-// === Load Bookmarked Ayahs ===
+// === Bookmarks ===
 async function loadBookmarks() {
   bookmarksPage.style.display = "block";
   surahListPage.style.display = "none";
   surahDetailPage.style.display = "none";
   bookmarkedAyahs.innerHTML = "<p>Loading...</p>";
 
-  if (!data.length) {
-    data = await fetchSheetData();
-  }
+  if (!data.length) data = await fetchSheetData();
 
   const keys = Object.keys(localStorage).filter(k => k.includes("_"));
   if (!keys.length) {
@@ -401,97 +526,71 @@ async function loadBookmarks() {
   bookmarkedAyahs.innerHTML = "";
   keys.forEach(key => {
     const [surah, ayah] = key.split("_");
-    const verse = data.find(v => 
-  v.SURAH.trim().toLowerCase() === surah.trim().toLowerCase() && 
-  String(v.AYAT).trim() === String(ayah).trim()
-)
+    const verse = data.find(v =>
+      v.SURAH.trim().toLowerCase() === surah.trim().toLowerCase() &&
+      String(v.AYAT).trim() === String(ayah).trim()
+    );
     if (verse) {
       const div = document.createElement("div");
       div.className = "ayah";
       div.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="display:flex; justify-content:space-between;">
           <strong>${verse.SURAH} — Ayah ${verse.AYAT}</strong>
-          <button class="remove-bookmark" data-key="${key}" style="border:none; background:none; color:red; font-size:16px; cursor:pointer;">❌</button>
+          <button class="remove-bookmark" data-key="${key}" style="border:none; background:none; color:red;">❌</button>
         </div>
-
-        <div class="arabic" style="
-          font-size:22px;
-          text-align:right;
-          margin-top:5px;
-          white-space: pre-wrap;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-        ">${verse.ARABIC}</div>
-
-        <div class="urdu" style="
-          font-family:'Noto Nastaliq Urdu', serif;
-          direction:rtl;
-          text-align:right;
-          font-size:20px;
-          margin-top:5px;
-          white-space: pre-wrap;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-        ">${verse.URDU}</div>
-
-        <div class="roman" style="
-          margin-top:5px;
-          white-space: pre-wrap;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-        "><b>Roman Urdu:</b> ${verse["ROMAN URDU"]}</div>
-
-        <div class="english" style="
-          margin-top:5px;
-          white-space: pre-wrap;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-        "><b>English:</b> ${verse["ENGLISH TRANSLATION"]}</div>
-
-        <button class="open-surah" data-surah="${verse.SURAH}" style="margin-top:8px;">📖 Open Surah</button>
-        <hr>
+        <div class="arabic" style="font-size:22px; text-align:right; margin-top:5px;">${verse.ARABIC}</div>
+        <div class="urdu" style="font-family:'Noto Nastaliq Urdu', serif; direction:rtl; text-align:right; font-size:20px; margin-top:5px;">${verse.URDU}</div>
+        <div class="roman" style="margin-top:5px;">Roman Urdu: ${verse["ROMAN URDU"]}</div>
+        <div class="english" style="margin-top:5px;">English: ${verse.ENGLISH}</div>
+        <div class="latin" style="margin-top:5px;">Latin English: ${verse["LATIN ENGLISH"]}</div>
       `;
       bookmarkedAyahs.appendChild(div);
     }
   });
 
-  // Handle remove + open
   document.querySelectorAll(".remove-bookmark").forEach(btn =>
     btn.addEventListener("click", e => {
-      const key = e.target.dataset.key;
-      localStorage.removeItem(key);
+      localStorage.removeItem(e.target.dataset.key);
       loadBookmarks();
-    })
-  );
-
-  document.querySelectorAll(".open-surah").forEach(btn =>
-    btn.addEventListener("click", e => {
-      const surahName = e.target.dataset.surah;
-      loadSurahDetails(1, surahName);
     })
   );
 }
 
-// === Navigation Buttons ===
+// === Navigation ===
 homeBtn.addEventListener("click", () => {
+  searchResults.style.display = "none"; // ✅ hide smart search
   surahListPage.style.display = "block";
   surahDetailPage.style.display = "none";
   bookmarksPage.style.display = "none";
 });
 bookmarksBtn.addEventListener("click", loadBookmarks);
 backBtn.addEventListener("click", () => {
+  // hide search
+  searchResults.style.display = "none";
+
+  // show Surah list
   surahListPage.style.display = "block";
+
+  // hide detail and bookmarks
   surahDetailPage.style.display = "none";
+  bookmarksPage.style.display = "none";
+
+  // reset the header title + back nav visibility
+  document.getElementById("pageNav").style.display = "none";
+  surahTitle.textContent = "";
 });
+
 backFromBookmarks.addEventListener("click", () => {
   surahListPage.style.display = "block";
   bookmarksPage.style.display = "none";
 });
+sectionsBtn.addEventListener("click", loadSections);
+backFromSections.addEventListener("click", () => {
+  sectionsPage.style.display = "none";
+  surahListPage.style.display = "block";
+});
 
-
-// === SECTION / TOPICS FEATURE ===
-
-// Load existing sections from localStorage
+// === Sections ===
 function loadSections() {
   surahListPage.style.display = "none";
   surahDetailPage.style.display = "none";
@@ -538,7 +637,6 @@ function loadSections() {
   });
 }
 
-// Create new section
 createSectionBtn.addEventListener("click", () => {
   const name = newSectionName.value.trim();
   if (!name) return alert("Please enter a section name.");
@@ -550,16 +648,14 @@ createSectionBtn.addEventListener("click", () => {
   loadSections();
 });
 
-// View inside a section
 async function openSection(name) {
   if (!data.length) data = await fetchSheetData();
-
   const sections = JSON.parse(localStorage.getItem("sections") || "{}");
   const ayahKeys = sections[name] || [];
   sectionsList.innerHTML = `<h3>📂 ${name}</h3><button id="backToSections">⬅ Back</button><div id="sectionAyahs"></div>`;
 
   const sectionAyahs = document.getElementById("sectionAyahs");
-  if (ayahKeys.length === 0) {
+  if (!ayahKeys.length) {
     sectionAyahs.innerHTML = "<p>No ayahs added yet.</p>";
   } else {
     ayahKeys.forEach(key => {
@@ -574,7 +670,7 @@ async function openSection(name) {
         div.innerHTML = `
           <strong>${verse.SURAH} — Ayah ${verse.AYAT}</strong>
           <div class="urdu">${verse.URDU}</div>
-          <div class="english">${verse["ENGLISH TRANSLATION"]}</div>
+          <div class="english">${verse.ENGLISH}</div>
           <button class="remove-from-section" data-key="${key}" style="color:red;">❌ Remove</button>
         `;
         sectionAyahs.appendChild(div);
@@ -582,38 +678,38 @@ async function openSection(name) {
     });
   }
 
-  // Go back
   document.getElementById("backToSections").addEventListener("click", loadSections);
-
-  // Remove ayah from section
-  document.querySelectorAll(".remove-from-section").forEach(btn => {
+  document.querySelectorAll(".remove-from-section").forEach(btn =>
     btn.addEventListener("click", e => {
       const key = e.target.dataset.key;
       const sections = JSON.parse(localStorage.getItem("sections") || "{}");
       sections[name] = sections[name].filter(k => k !== key);
       localStorage.setItem("sections", JSON.stringify(sections));
       openSection(name);
-    });
-  });
+    })
+  );
 }
 
-// Add ayah to a section (to call from Surah view)
 function addToSection(key) {
   const sections = JSON.parse(localStorage.getItem("sections") || "{}");
   const names = Object.keys(sections);
-  if (names.length === 0) return alert("Please create a section first.");
-
+  if (!names.length) return alert("Please create a section first.");
   const choice = prompt(`Add to which section?\n${names.join("\n")}`);
   if (!choice || !sections[choice]) return;
-
   if (!sections[choice].includes(key)) {
     sections[choice].push(key);
     localStorage.setItem("sections", JSON.stringify(sections));
     alert("Ayah added to section!");
-  } else {
-    alert("Already in that section.");
-  }
+  } else alert("Already in that section.");
 }
+window.addEventListener("scroll", () => {
+  const header = document.getElementById("fixedHeader");
+  if (window.scrollY > 10) {
+    header.style.boxShadow = "0 3px 8px rgba(0,0,0,0.4)";
+  } else {
+    header.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
+  }
+});
 
 // === Initialize ===
 (async () => {
